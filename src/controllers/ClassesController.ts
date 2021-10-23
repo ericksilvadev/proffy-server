@@ -9,12 +9,6 @@ interface ScheduleItem {
   to: string;
 }
 
-interface Filters {
-  subject: string;
-  week_day: string;
-  time: string;
-}
-
 export class ClassesController {
   async index(request: Request, response: Response) {
     const filters = request.query;
@@ -38,7 +32,7 @@ export class ClassesController {
           .whereRaw('`class_schedule`.`class_id` = `classes`.`id`')
           .whereRaw('`class_schedule`.`week_day` = ??', [+week_day])
           .whereRaw('`class_schedule`.`from` <= ??', [timeInMinutes])
-          .whereRaw('`class_schedule`.`to` > ??', [timeInMinutes])
+          .whereRaw('`class_schedule`.`to` > ??', [timeInMinutes]);
       })
       .where('classes.subject', '=', subject)
       .join('users', 'classes.user_id', '=', 'users.id')
@@ -92,8 +86,7 @@ export class ClassesController {
   
       return response.status(400).json({
         error: 'Unexpected error while creating class'
-      })
+      });
     }
-  
   }
 }
