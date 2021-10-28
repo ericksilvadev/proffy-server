@@ -19,14 +19,14 @@ export class ClassesController {
 
     if (!subject || !week_day || !time) {
       return response.status(400).json({
-        error: "Missing filters to search classes"
+        error: 'Missing filters to search classes',
       });
     }
 
     const timeInMinutes = convertHoursToMinutes(time as string);
 
     const classes = await db('classes')
-      .whereExists(function() {
+      .whereExists(function () {
         this.select('class_schedule.*')
           .from('class_schedule')
           .whereRaw('`class_schedule`.`class_id` = `classes`.`id`')
@@ -42,50 +42,44 @@ export class ClassesController {
   }
 
   async create(request: Request, response: Response) {
-    const {
-      name,
-      avatar,
-      whatsapp,
-      bio,
-      subject,
-      cost,
-      schedule
-    } = request.body;
-  
+    const { name, avatar, whatsapp, bio, subject, cost, schedule } =
+      request.body;
+
     const trx = await db.transaction();
-  
+
     try {
       const [user_id] = await trx('users').insert({
         name,
         avatar,
         whatsapp,
-        bio
+        bio,
       });
-    
+
       const [class_id] = await trx('classes').insert({
         subject,
         cost,
-        user_id
+        user_id,
       });
-      
-      const classSchedule = schedule.map(({ week_day, from, to }: ScheduleItem) => ({
+
+      const classSchedule = schedule.map(
+        ({ week_day, from, to }: ScheduleItem) => ({
           week_day,
           from: convertHoursToMinutes(from),
           to: convertHoursToMinutes(to),
-          class_id
-        }
-        ));
-        
-        await trx('class_schedule').insert(classSchedule);
-        
-        await trx.commit();
-  
-        return response.status(201).send();
-    } catch(err) {
+          class_id,
+        })
+      );
+
+      await trx('class_schedule').insert(classSchedule);
+
+      await trx.commit();
+
+      return response.status(201).send();
+    } catch (err) {
       await trx.rollback();
-  
+
       return response.status(400).json({
-        error: 'Unexpected error while creating class'
+        error: 'Unexpected error while creating class',
       });
     }
   }
